@@ -1,0 +1,7 @@
+﻿  driver.cpp
+c:\users\cclp94\code\comp 426\tbb - multi-species game of life\multi-species game of life\driver.cpp(105): warning C4018: '<': signed/unsigned mismatch
+c:\users\cclp94\code\comp 426\tbb - multi-species game of life\multi-species game of life\driver.cpp(106): warning C4018: '<': signed/unsigned mismatch
+c:\users\cclp94\code\comp 426\tbb - multi-species game of life\multi-species game of life\driver.cpp(133): warning C4102: 'tbb': unreferenced label
+c:\users\cclp94\code\comp 426\tbb - multi-species game of life\multi-species game of life\driver.cpp(147): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Multi-Species Game of Life.vcxproj -> C:\Users\cclp94\Code\COMP 426\TBB - Multi-Species Game of Life\Debug\Multi-Species Game of Life.exe
+  Multi-Species Game of Life.vcxproj -> C:\Users\cclp94\Code\COMP 426\TBB - Multi-Species Game of Life\Debug\Multi-Species Game of Life.pdb (Full PDB)
