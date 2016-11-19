@@ -130,23 +130,31 @@ int main()
 		return 1;
 
 	//-----------------GET DEVICES---------------------
-	cl_device_id devices[2];
-	cl_uint devices_n = 0;
+	cl_device_id gpu_devices[10], cpu_devices[10];
+	cl_uint devices_n = 0, gpu_device_count = 0, cpu_device_count=0;
 	cl_int err = 0;
-	err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, 1, &devices[0], &devices_n);
-	err = clGetDeviceIDs(platforms[1], CL_DEVICE_TYPE_CPU, 1, &devices[1], &devices_n);
+	for (int i = 0; i < platforms_n; i++) {
+		err = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 1, &gpu_devices[devices_n], &devices_n);
+		gpu_device_count += devices_n;
+	}
+	devices_n = 0;
+	for (int i = 0; i < platforms_n; i++) {
+		err = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, 1, &cpu_devices[devices_n], &devices_n);
+		cpu_device_count += devices_n;
+	}
 
-	displayDevices(2, devices);
+	displayDevices(gpu_device_count, gpu_devices);
+	displayDevices(cpu_device_count, cpu_devices);
 
 	cl_context gpu_context, cpu_context;
-	gpu_context = clCreateContext(NULL, 1, &devices[0], NULL, NULL, &err);
-	cpu_context = clCreateContext(NULL, 1, &devices[1], NULL, NULL, &err);
+	gpu_context = clCreateContext(NULL, 1, &gpu_devices[0], NULL, NULL, &err);
+	cpu_context = clCreateContext(NULL, 1, &cpu_devices[0], NULL, NULL, &err);
 
 	//---------------CREATE COMMAND QUEUE---------------
 	
 	cl_command_queue queue_gpu, queue_cpu;
-	queue_gpu = clCreateCommandQueue(gpu_context, devices[0], 0, &err);
-	queue_cpu = clCreateCommandQueue(cpu_context, devices[1], 0, &err);
+	queue_gpu = clCreateCommandQueue(gpu_context, gpu_devices[0], 0, &err);
+	queue_cpu = clCreateCommandQueue(cpu_context, cpu_devices[0], 0, &err);
 
 
 	//--------------NUM SPECIES INPUT-----------------
@@ -413,8 +421,8 @@ int main()
 	clReleaseMemObject(cpu_WIDTH);
 	clReleaseKernel(initializeCellsKernel);
 	clReleaseProgram(initializeCellsProgram);
-	clReleaseDevice(devices[0]);
-	clReleaseDevice(devices[1]);
+	for (int i = 0; i < gpu_device_count; i++)	clReleaseDevice(gpu_devices[i]);
+	for (int i = 0; i < cpu_device_count; i++)	clReleaseDevice(cpu_devices[i]);
 	clReleaseKernel(tickKernel);
 	clReleaseKernel(calcImageKernel);
 	clReleaseProgram(calcImageProgram);
