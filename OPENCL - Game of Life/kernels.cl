@@ -37,7 +37,7 @@ __kernel void initializeCells(__global struct Cell* cellGrid, __global const int
 
 	int WIDTH = get_global_size(0);
 
-	unsigned int randomGen = 1103515245 * (y)+12345;
+	unsigned int randomGen = 1103515245/(y-x) * (y*WIDTH + x)+12345*y;
 
 	int rand1 = (randomGen % *numSpecies);
 	int rand2 = randomGen % 100;
@@ -48,6 +48,21 @@ __kernel void initializeCells(__global struct Cell* cellGrid, __global const int
 	}
 	else
 		cellGrid[y*WIDTH + x].alive[speciesID] = false;
+}
+
+float4 rand(uint2 *state)
+{
+	const float4 invMaxInt = (float4) (1.0f / 4294967296.0f, 1.0f / 4294967296.0f, 1.0f / 4294967296.0f, 0);
+	uint x = (*state).x * 17 + (*state).y * 13123;
+	(*state).x = (x << 13) ^ x;
+	(*state).y ^= (x << 7);
+
+	uint4 tmp = (uint4)
+		((x * (x * x * 15731 + 74323) + 871483),
+		(x * (x * x * 13734 + 37828) + 234234),
+			(x * (x * x * 11687 + 26461) + 137589), 0);
+
+	return convert_float4(tmp) * invMaxInt;
 }
 
 __kernel void calcImage(__global const struct Cell* cellGrid, __global const int *currentSpecies, write_only image2d_t rgb, __global const int *WIDTH, __global const int *HEIGHT, __global const float *color)
