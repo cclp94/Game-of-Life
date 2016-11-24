@@ -39,21 +39,10 @@ int numSpecies = 0;
 using namespace std;
 
 void displayPlatforms(int n, cl_platform_id platforms[100]);
-void displayDevices(int n, cl_device_id devices[2]);
-
-//cudaError_t gameOfLife();
-//void tickGame(GLubyte *rgb, Cell *device_cell, Cell *device_result_cell, GLubyte *device_colorList);
-//bool initializeOpenGL();
-//bool cleanUp();
-//void render(GLubyte *rgb);
-//void initializeGame(Cell *device_cell, Cell *device_result_cell);
+void displayDevices(int n, cl_device_id *devices);
 //
 GLFWwindow* window = 0x00;
 GLfloat point_size = 3.0f;
-//
-//GLubyte *rgb;
-//GLuint TEX, PBO;
-//cudaGraphicsResource *CUDA_PBO;
 
 GLuint TEX, PBO;
 float *rgb = new float[WIDTH*HEIGHT * 4];
@@ -75,15 +64,6 @@ bool initializeOpenGL() {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-
-	//glEnable(GL_TEXTURE_2D);
-	//glGenTextures(1, &TEX);
-	//glBindTexture(GL_TEXTURE_2D, TEX);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	//glTexImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT,
-	//	GL_RGBA, GL_FLOAT, rgb);
-
 	return true;
 }
 
@@ -91,24 +71,6 @@ void render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
 	glPointSize(point_size);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, TEX);
-	//
-	//glTexImage2D(GL_TEXTURE_2D, 0, 0, WIDTH, HEIGHT, 0,
-	//	GL_RGBA, GL_FLOAT, rgb);
-	//
-	//glBegin(GL_QUADS);
-	//glTexCoord2f(0, 0);
-	//glVertex2f(-1, -1);
-	//glTexCoord2f(1, 0);
-	//glVertex2f(1, -1);
-	//glTexCoord2f(1, 1);
-	//glVertex2f(1, 1);
-	//glTexCoord2f(0, 1);
-	//glVertex2f(-1, 1);
-	//glEnd();
-	//
-	//glBindTexture(GL_TEXTURE_2D, 0);
 
 	glDrawPixels(WIDTH, HEIGHT, GL_RGBA, GL_FLOAT, rgb);
 	glfwPollEvents();
@@ -124,7 +86,7 @@ int main()
 	cl_uint platforms_n = 0;
 	clGetPlatformIDs(100, platforms, &platforms_n);
 
-	displayPlatforms(platforms_n, platforms);
+	//displayPlatforms(platforms_n, platforms);
 
 	if (platforms_n == 0)
 		return 1;
@@ -143,8 +105,8 @@ int main()
 		cpu_device_count += devices_n;
 	}
 
-	displayDevices(gpu_device_count, gpu_devices);
-	displayDevices(cpu_device_count, cpu_devices);
+	//displayDevices(gpu_device_count, gpu_devices);
+	//displayDevices(cpu_device_count, cpu_devices);
 
 	cl_context gpu_context, cpu_context;
 	gpu_context = clCreateContext(NULL, 1, &gpu_devices[0], NULL, NULL, &err);
@@ -211,18 +173,14 @@ int main()
 	initializeCellsProgram = clCreateProgramWithSource(gpu_context,
 		1, (const char**) &source, NULL, &err);
 	// build the program
-	std::cout << err << endl;
 	err = clBuildProgram(initializeCellsProgram, 0, NULL, NULL,
 		NULL, NULL);
-	std::cout << err << endl;
 	// create the kernel
 	initializeCellsKernel = clCreateKernel(initializeCellsProgram, "initializeCells",
 		&err);
-	std::cout << err << endl;
 	// set the kernel Argument values
 	err = clSetKernelArg(initializeCellsKernel, 0,
 		sizeof(cl_mem), (void*)&device_cellGrid);
-	std::cout << err << endl;
 	err |= clSetKernelArg(initializeCellsKernel, 1,
 		sizeof(cl_mem), (void*)&device_numSpecies);
 	err |= clSetKernelArg(initializeCellsKernel, 2,
@@ -238,16 +196,12 @@ int main()
 		initializeCellsKernel, 2, NULL, globalWorkSize,
 		localWorkSize, 0, NULL, &cellReady);
 
-	std::cout << err << endl;
-
 	//------------------CREATE TICK KERNEL--------------------
 
 	cl_kernel tickKernel;
-	std::cout << err << endl;
 	// create the kernel
 	tickKernel = clCreateKernel(initializeCellsProgram, "computeTick",
 		&err);
-	std::cout << "Create tick kernel " << err << endl;
 
 
 	cl_mem device_copyCell;
@@ -269,10 +223,8 @@ int main()
 	calcImageProgram = clCreateProgramWithSource(cpu_context,
 		1, (const char**)&source, NULL, &err);
 	// build the program
-	std::cout << err << endl;
 	err = clBuildProgram(calcImageProgram, 0, NULL, NULL,
 		NULL, NULL);
-	std::cout << err << endl;
 	// create the kernel
 	calcImageKernel = clCreateKernel(calcImageProgram, "calcImage",
 		&err);
@@ -404,11 +356,6 @@ int main()
 	}
 
 	glfwTerminate();
-	// Consume event done : get kernel for color calculation, enqueue for cpu waiting for previous kernel completion
-	// When done, render texture
-
-	// In the mean time, calculate next iteration with gpu kernel -> send event when done
-
 	// ===========================
 	free(source);
 	clReleaseMemObject(device_cellGrid);
@@ -454,7 +401,7 @@ void displayPlatforms(int n, cl_platform_id platforms[100]) {
 	}
 }
 
-void displayDevices(int n, cl_device_id devices[2]) {
+void displayDevices(int n, cl_device_id *devices) {
 	for (int i = 0; i < n; i++)
 	{
 		char buffer[10240];

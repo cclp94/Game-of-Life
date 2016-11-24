@@ -30,26 +30,6 @@ __kernel void computeTick(__global const struct Cell* cellGrid, __global struct 
 	}
 }
 
-__kernel void initializeCells(__global struct Cell* cellGrid, __global const int *numSpecies, __global const float *seed)
-{
-	int x = get_global_id(0);
-	int y = get_global_id(1);
-
-	int WIDTH = get_global_size(0);
-
-	unsigned int randomGen = 1103515245/(y-x) * (y*WIDTH + x)+12345*y;
-
-	int rand1 = (randomGen % *numSpecies);
-	int rand2 = randomGen % 100;
-
-	int speciesID = rand1;
-	if (rand2 <=70) {
-		cellGrid[y*WIDTH + x].alive[speciesID] = true;
-	}
-	else
-		cellGrid[y*WIDTH + x].alive[speciesID] = false;
-}
-
 float4 rand(uint2 *state)
 {
 	const float4 invMaxInt = (float4) (1.0f / 4294967296.0f, 1.0f / 4294967296.0f, 1.0f / 4294967296.0f, 0);
@@ -64,6 +44,30 @@ float4 rand(uint2 *state)
 
 	return convert_float4(tmp) * invMaxInt;
 }
+
+__kernel void initializeCells(__global struct Cell* cellGrid, __global const int *numSpecies, __global const float *seed)
+{
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+
+	int WIDTH = get_global_size(0);
+
+	uint2 state = (uint2) ((int) *seed, y*WIDTH + x );
+
+	float4 randomGen = rand(&state) * 1000;
+
+	int rand1 = (((int)randomGen.y) % *numSpecies);
+	int rand2 = ((int)randomGen.x) % 100;
+
+	int speciesID = rand1;
+	if (rand2 <=50) {
+		cellGrid[y*WIDTH + x].alive[speciesID] = true;
+	}
+	else
+		cellGrid[y*WIDTH + x].alive[speciesID] = false;
+}
+
+
 
 __kernel void calcImage(__global const struct Cell* cellGrid, __global const int *currentSpecies, write_only image2d_t rgb, __global const int *WIDTH, __global const int *HEIGHT, __global const float *color)
 {
